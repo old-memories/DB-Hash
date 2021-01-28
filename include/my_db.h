@@ -6,7 +6,7 @@
 #include"hash_func.h"
 
 typedef enum cmd_type {
-    PUT,
+    SET,
     GET,
     DELETE,
 } cmd_type_t;
@@ -22,7 +22,6 @@ typedef struct db_data {
     cmd_type_t cmd_type;
     cmd_status_t status;
     void *key;
-    hash_type_t hash_type;
     size_t key_len; 
     void *value;
     size_t value_len;

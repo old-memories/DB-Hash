@@ -1,24 +1,7 @@
 
 #include "client.h"
-#include "my_db.h"
 
 extern int errno;
-
-static void
-create_req(request_t *req, char *input)
-{
-    /*
-        put [key] [val]
-        set [key] [val]
-        del [key] [val]
-    */
-}
-
-static void
-show_rsp(response_t *rsp)
-{
-    
-}
 
 int
 run_client(conf_t *conf)
@@ -124,7 +107,13 @@ run_client(conf_t *conf)
                     int len = 0;
 
                     if((len = recv(sock_server, recv_buf, CLIENT_RECV_BUF_SIZE, 0)) <= 0){
-                        fprintf(stderr, "recv failed. close pipe and sock_server\n");
+                        if(len == 0){
+                            fprintf(stderr, "server exited. close pipe and sock_server\n");
+                        }
+                        else{
+                            fprintf(stderr, "recv failed. close pipe and sock_server\n");
+                        }
+
                         close(pipe_fd[0]);
                         close(sock_server);
                         stop = 1;
@@ -134,7 +123,8 @@ run_client(conf_t *conf)
                     response_t rsp;
                     memset(&rsp, 0, sizeof(response_t));
                     memcpy(&rsp, recv_buf, sizeof(response_t));
-                    show_rsp(&rsp);                    
+                    fprintf(stdout, "\n");
+                    show_rsp(stdout, &rsp);                    
                     
                 } else {
                     char read_buf[CLIENT_INPUT_SIZE];
@@ -156,7 +146,10 @@ run_client(conf_t *conf)
 
                     request_t req;
                     memset(&req, 0, sizeof(request_t));
-                    create_req(&req, read_buf);
+                    if(create_req(&req, read_buf) != 0){
+                        fprintf(stdout, "\ncreate_req failed. request format error\n");
+                        continue;
+                    }
 
                     char send_buf[CLIENT_SEND_BUF_SIZE];
                     memset(send_buf, 0, CLIENT_SEND_BUF_SIZE);
@@ -172,10 +165,6 @@ run_client(conf_t *conf)
                 }
             }
         }
-    }
-
-    if(child_pid){
-        waitpid(child_pid, NULL, 0);
     }
 
     return 0;

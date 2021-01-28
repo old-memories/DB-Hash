@@ -12,6 +12,7 @@ set(SOURCES
     source/hash_func.c
     source/my_hash.c
     source/server.c
+    source/request_response.c
 )
 
 
