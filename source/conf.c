@@ -47,7 +47,7 @@ usage()
 void
 parse_conf(int argc, char **argv, conf_t *conf)
 {
-    const char short_opts[] = "n:a:p:s:r:c:";
+    const char short_opts[] = "n:a:p:s:r:c:h";
 
     int opt;
     
