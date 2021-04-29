@@ -74,8 +74,64 @@ close_db(db_t *db){
     return delete_db(&db_list_head, db);
 }
 
-int
-db_run_cmd(db_data_t *in_data, db_data_t *out_data)
+
+static int
+db_set(db_t *db, void *key, size_t key_len, void *value, size_t value_len)
 {
+    int ret = 0;
+
+    
     return 0;
+}
+
+static int
+db_get(db_t *db, void *key, size_t key_len, void *value, size_t *value_len)
+{
+    int ret = 0;
+
+
+    return 0;
+}
+
+
+
+static int
+db_delete(db_t *db, void *key, size_t key_len)
+{
+    int ret = 0;
+
+    
+    return 0;
+}
+
+int
+db_run_cmd(db_t *db, db_data_t *data)
+{
+    int ret = 0;
+
+    if (data == NULL) {
+        return -1;
+    }
+
+    switch (data->cmd_type) {
+        case SET: {
+            ret = db_set(db, data->key, data->key_len, data->value, data->value_len);
+            break;
+        }
+        case GET: {
+            ret = db_get(db, data->key, data->key_len, data->value, &(data->value_len));
+            break;
+        }
+        case DELETE: {
+            ret = db_delete(db, data->key, data->key_len);
+            break;
+        }
+        default: {
+            ret = -1;
+            break;
+        }
+    }
+
+    return ret;
+
 }

@@ -58,7 +58,7 @@ create_req(request_t *req, char *input)
 }
 
 int
-create_rsp(request_t *req, response_t *rsp)
+create_rsp(db_t *db, request_t *req, response_t *rsp)
 {
 
    int ret = 0;
@@ -66,6 +66,7 @@ create_rsp(request_t *req, response_t *rsp)
         db_run_cmd
     */
    memcpy(&(rsp->data), &(req->data), sizeof(db_data_t));
+   ret = db_run_cmd(db, &(rsp->data));
    if(ret == 0){
        rsp->status = RSP_SUCCESS;
    }

@@ -57,6 +57,6 @@ typedef struct db_list {
 extern db_t *create_db(char *name, size_t size);
 extern db_t *open_db(char *name);
 extern int close_db(db_t *db);
-extern int db_run_cmd(db_data_t *in_data, db_data_t *out_data);
+extern int db_run_cmd(db_t *db, db_data_t *data);
 
 #endif
