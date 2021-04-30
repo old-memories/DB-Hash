@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <pthread.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "conf.h"
