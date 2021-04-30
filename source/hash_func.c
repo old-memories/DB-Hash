@@ -1,6 +1,6 @@
 #include "hash_func.h"
 
-const size_t prime_numbers[PRIME_NUMBERS] = {
+static const size_t prime_numbers[PRIME_NUMBERS] = {
     53ul,
     97ul,
     193ul,
@@ -28,7 +28,6 @@ const size_t prime_numbers[PRIME_NUMBERS] = {
     1610612741ul,
 };
 
-
 size_t
 round_to_prime_number(size_t number)
 {
@@ -45,20 +44,19 @@ round_to_prime_number(size_t number)
 }
 
 size_t
-hash_func_number(const void *key, size_t key_len, size_t size)
-{
-    size_t number = *(size_t *)(key);
-    return number % size;
-}
-
-size_t
 hash_func_string(const void *key, size_t key_len, size_t size)
 {
-    const char *_key = *((const char **)key);
+    const char *_key = (const char *)key;
     size_t seed = 1313131;
     size_t h = 0;
     while(key_len--){
         h = h * seed + (*_key++);
     }
     return h % size;
+}
+
+int 
+key_string_cmp(const void *k1, const void *k2, size_t key_len)
+{
+    return strncmp((const char *)k1, (const char *)k2, key_len);
 }
