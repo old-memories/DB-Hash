@@ -28,13 +28,8 @@ run_cmd(void *arg)
 
     response_t rsp;
     memset(&rsp, 0, sizeof(request_t));
-    int ret = db_run_cmd(&(req.data), &(rsp.data));
-    if(ret == 0){
-        rsp.status = RSP_SUCCESS;
-    }
-    else{
-        rsp.status = RSP_FAILURE;
-    }
+    
+    create_rsp(&req, &rsp);
 
     char send_buf[SERVER_SEND_BUF_SIZE];
     memset(send_buf, 0, SERVER_SEND_BUF_SIZE);
