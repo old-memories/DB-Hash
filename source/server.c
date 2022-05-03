@@ -2,6 +2,8 @@
 #include "server.h"
 #include "my_db.h"
 
+extern int errno;
+
 static db_t *g_db;
 
 static void *
@@ -44,7 +46,7 @@ run_server(conf_t *conf)
     int on = 1;
     pthread_t cmd_handler;
     int arg;
-
+    
     if(conf->create){
         if((g_db = create_db(conf->name, conf->db_size)) == NULL){
             fprintf(stderr, "create new db failed\n");
@@ -101,19 +103,22 @@ run_server(conf_t *conf)
 
     while(1){
         if((epoll_events_count = epoll_wait(epfd, events, SERVER_EPOLL_SIZE, -1)) < 0){
-        fprintf(stderr, "epoll_wait failed\n");
+            if(errno == EINTR) {
+                continue;
+            }
+            fprintf(stderr, "epoll_wait failed, error: %m\n", errno);
             return -1;
         }
         for(int i = 0; i < epoll_events_count; i++){
             if(events[i].data.fd == sock_listener){
                 if((sock_client = accept(sock_listener, (struct sockaddr *)&client_addr, &socklen)) < 0){
-                    fprintf(stderr, "accept failed\n");
+                    fprintf(stderr, "accept failed, error: %m\n", errno);
                     return -1;
                 }
              
                 ev.data.fd = sock_client;
                 if(epoll_ctl(epfd, EPOLL_CTL_ADD, sock_client, &ev) < 0){
-                    fprintf(stderr, "epoll_ctl failed\n");
+                    fprintf(stderr, "epoll_ctl failed, error: %m\n", errno);
                     return -1;
                 }
 
