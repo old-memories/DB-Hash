@@ -22,7 +22,7 @@ typedef struct response {
 } response_t;
 
 extern int create_req(request_t *req, char *input);
-extern int create_rsp(request_t *req, response_t *rsp);
+extern int create_rsp(db_t *db, request_t *req, response_t *rsp);
 extern void show_rsp(FILE *stream,  response_t *rsp);
 
 #endif
