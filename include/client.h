@@ -15,7 +15,7 @@
 #include "conf.h"
 #include "request_response.h"
 
-#define CLIENT_INPUT_SIZE 1024
+#define CLIENT_INPUT_SIZE 1 << 12
 #define CLIENT_EXIT_STRING "EXIT"
 
 extern int run_client(conf_t *conf);
