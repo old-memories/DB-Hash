@@ -13,6 +13,7 @@ create_req(request_t *req, char *input)
     char * pos[3];
     char * pch;
     int i = 0;
+    size_t len = 0;
     pch = strtok(input, " ");
     while(pch != NULL && i < 3){
         pos[i++] = pch;
@@ -26,28 +27,40 @@ create_req(request_t *req, char *input)
     if(strcmp("get", pos[i]) == 0){
         i++;
         req->data.cmd_type = GET;
-        req->data.key_len = strlen(pos[i]);
-        req->data.key = malloc(req->data.key_len);
+        len = strlen(pos[i]);
+        if (len > MAX_KEY_LEN) {
+            return -1;
+        }
+        req->data.key_len = len;
         memcpy(req->data.key, pos[i], req->data.key_len);
         return 0;
     }
     if(strcmp("del", pos[i]) == 0){
         i++;
         req->data.cmd_type = DELETE;
-        req->data.key_len = strlen(pos[i]);
-        req->data.key = malloc(req->data.key_len);
+        len = strlen(pos[i]);
+        if (len > MAX_KEY_LEN) {
+            return -1;
+        }
+        req->data.key_len = len;
         memcpy(req->data.key, pos[i], req->data.key_len);
         return 0;
     }    
     if(strcmp("set", pos[i]) == 0){
         i++;
         req->data.cmd_type = SET;
-        req->data.key_len = strlen(pos[i]);
-        req->data.key = malloc(req->data.key_len);
+        len = strlen(pos[i]);
+        if (len > MAX_KEY_LEN) {
+            return -1;
+        }
+        req->data.key_len = len;
         memcpy(req->data.key, pos[i], req->data.key_len);
         i++;
-        req->data.value_len = strlen(pos[i]);
-        req->data.value = malloc(req->data.value_len);
+        len = strlen(pos[i]);
+        if (len > MAX_VALUE_LEN) {
+            return -1;
+        }
+        req->data.value_len = len;
         memcpy(req->data.value, pos[i], req->data.value_len);
         return 0;
     }
