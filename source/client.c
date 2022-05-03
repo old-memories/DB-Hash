@@ -14,7 +14,7 @@ run_client(conf_t *conf)
     int recv_len;
 
     if((sock_server = socket(PF_INET, SOCK_STREAM, 0)) < 0){
-        fprintf(stderr, "socket failed. errno: [%d]\n", errno);
+        fprintf(stderr, "socket failed. errno: [%m]\n",  errno);
         return -1;
     }
     
@@ -24,7 +24,7 @@ run_client(conf_t *conf)
     server_addr.sin_addr.s_addr = inet_addr(conf->addr);
     
     if(connect(sock_server, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
-        fprintf(stderr, "connect failed. errno: [%d]\n", errno);
+        fprintf(stderr, "connect failed. errno: [%m]\n", errno);
         return -1;
     }
     
