@@ -2,18 +2,19 @@
 #include "server.h"
 #include "my_db.h"
 
+static db_t *g_db;
 
 static void *
 run_cmd(void *arg)
 {
     int sock_client = *((int *)arg);
-    char recv_buf[SERVER_RECV_BUF_SIZE];
-    memset(recv_buf, 0, SERVER_RECV_BUF_SIZE);
+    request_t req;
+    response_t rsp;
     int len = 0;
 
-    if((len = recv(sock_client, recv_buf, SERVER_RECV_BUF_SIZE, 0)) <= 0){
+    if((len = recv(sock_client, (void*)&req, sizeof(request_t), 0)) <= 0){
         if(len == 0){
-            fprintf(stdout, "client: [%d] exited\n", sock_client);
+            fprintf(stdout, "client: [%d] exited. close client.\n", sock_client);
         }
         else {
             fprintf(stdout, "recv failed. close client: [%d]\n", sock_client);
@@ -21,51 +22,36 @@ run_cmd(void *arg)
         close(sock_client);
         return NULL;
     }
-
-    request_t req;
-    memset(&req, 0, sizeof(request_t));
-    memcpy(&req, recv_buf, sizeof(request_t));
-
-    response_t rsp;
-    memset(&rsp, 0, sizeof(request_t));
     
-    create_rsp(&req, &rsp);
+    create_rsp(g_db, &req, &rsp);
 
-    char send_buf[SERVER_SEND_BUF_SIZE];
-    memset(send_buf, 0, SERVER_SEND_BUF_SIZE);
-    memcpy(send_buf, &rsp, sizeof(response_t));
-    if(send(sock_client, send_buf, SERVER_SEND_BUF_SIZE, 0) < 0){
+    if(send(sock_client, (void *)&rsp, sizeof(response_t), 0) < 0){
         fprintf(stdout, "send failed. close client: [%d]\n", sock_client);
         close(sock_client);
         return NULL;
     }
+
     return NULL;
-
-}
-
-static int
-set_nonblock_socket(int sockfd)
-{
-    return fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFD, 0) | O_NONBLOCK);
 }
 
 int
 run_server(conf_t *conf)
 {    
-    db_t *db = NULL;
     int sock_listener, epfd, sock_client, epoll_events_count;
     struct sockaddr_in server_addr, client_addr;
     socklen_t socklen = sizeof(struct sockaddr_in);
     static struct epoll_event ev, events[SERVER_EPOLL_SIZE];
-
+    int on = 1;
+    pthread_t cmd_handler;
+    int arg;
 
     if(conf->create){
-        if((db = create_db(conf->name, conf->db_size)) == NULL){
+        if((g_db = create_db(conf->name, conf->db_size)) == NULL){
             fprintf(stderr, "create new db failed\n");
             return -1;
         }
     }
-    if((db = open_db(conf->name)) == NULL){
+    if((g_db = open_db(conf->name)) == NULL){
         fprintf(stderr, "open db failed\n");
         return -1;
     }
@@ -75,13 +61,7 @@ run_server(conf_t *conf)
         return -1;
 
     }
-    if(set_nonblock_socket(sock_listener) < 0){
-        fprintf(stderr, "set_nonblock_socket failed\n");
-        return -1;
 
-    }
-
-    int on = 1;
     if((setsockopt(sock_listener, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0){
         fprintf(stderr, "setsockopt failed\n");
         return -1;
@@ -100,7 +80,6 @@ run_server(conf_t *conf)
     }
     if(listen(sock_listener, SERVER_LISTEN_NUM) < 0){
         fprintf(stderr, "listen failed\n");
-
         return -1;
 
     }
@@ -131,25 +110,21 @@ run_server(conf_t *conf)
                     fprintf(stderr, "accept failed\n");
                     return -1;
                 }
-                if(set_nonblock_socket(sock_client) < 0){
-                    fprintf(stderr, "set_nonblock_socket failed\n");
-                    return -1;
-
-                }                
+             
                 ev.data.fd = sock_client;
                 if(epoll_ctl(epfd, EPOLL_CTL_ADD, sock_client, &ev) < 0){
                     fprintf(stderr, "epoll_ctl failed\n");
                     return -1;
                 }
-                fprintf(stdout, "accept new client: [%d]\n", sock_client);
-                /* TODO: Record sock_client in a set.
 
+                fprintf(stdout, "accept new client: [%d]\n", sock_client);
+                /* 
+                TODO: Record sock_client in a set.
                 */
             }
             else{
                 fprintf(stdout, "create a new thread to run command for client: [%d]\n", events[i].data.fd);
-                pthread_t cmd_handler;
-                int arg = events[i].data.fd;
+                arg = events[i].data.fd;
                 if(pthread_create(&cmd_handler, NULL, run_cmd, (void *)&arg) < 0){
                     return -1;
                 }
